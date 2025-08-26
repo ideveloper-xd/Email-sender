@@ -11,17 +11,19 @@
   >
     <div class="w-full max-w-md p-6 rounded-2xl shadow-xl bg-white/10">
       <h1 class="text-2xl font-bold text-center mb-6">Admin Login</h1>
+
+      <!-- Login Form -->
       <form id="loginForm" class="space-y-4">
         <input
           type="text"
           id="username"
-          placeholder="Username"
+          placeholder="Admin Username"
           class="w-full p-2 rounded bg-white/20 text-white placeholder-gray-300 focus:outline-none"
         />
         <input
           type="password"
           id="password"
-          placeholder="Password"
+          placeholder="Admin Password"
           class="w-full p-2 rounded bg-white/20 text-white placeholder-gray-300 focus:outline-none"
         />
         <button
@@ -31,6 +33,7 @@
         </button>
       </form>
 
+      <!-- Email Form -->
       <form id="emailForm" class="space-y-4 hidden mt-6">
         <input
           type="email"
@@ -39,10 +42,25 @@
           class="w-full p-2 rounded bg-white/20 text-white placeholder-gray-300 focus:outline-none"
         />
 
+        <input
+          type="text"
+          id="buyerUsername"
+          placeholder="Buyer Username"
+          class="w-full p-2 rounded bg-white/20 text-white placeholder-gray-300 focus:outline-none"
+        />
+
+        <input
+          type="text"
+          id="buyerPassword"
+          placeholder="Buyer Password"
+          class="w-full p-2 rounded bg-white/20 text-white placeholder-gray-300 focus:outline-none"
+        />
+
         <select id="template" class="w-full p-2 rounded bg-white/20 text-white">
-          <option value="welcome">Welcome Email</option>
-          <option value="warning">Warning Email</option>
-          <option value="newsletter">Newsletter</option>
+          <option value="aim">🎯 AIM SUPREME</option>
+          <option value="esp">🔥 ESP SUPREME</option>
+          <option value="dark">🧩 DARK SUPREME</option>
+          <option value="essential">💀 DARK ESSENTIAL</option>
         </select>
 
         <button
@@ -58,12 +76,19 @@
       const loginForm = document.getElementById("loginForm");
       const emailForm = document.getElementById("emailForm");
 
+      let adminUsername = "";
+      let adminPassword = "";
+
+      // Login check
       loginForm.addEventListener("submit", (e) => {
         e.preventDefault();
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value.trim();
 
         if (username === "admin" && password === "1234") {
+          adminUsername = username;
+          adminPassword = password;
+
           loginForm.classList.add("hidden");
           emailForm.classList.remove("hidden");
         } else {
@@ -71,18 +96,29 @@
         }
       });
 
+      // Send email
       emailForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const recipient = document.getElementById("recipient").value;
         const template = document.getElementById("template").value;
+        const buyerUsername = document.getElementById("buyerUsername").value;
+        const buyerPassword = document.getElementById("buyerPassword").value;
 
-        await fetch("https://email-sender-968t.onrender.com/send-email", {
+        const res = await fetch("http://localhost:5000/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recipient, template }),
+          body: JSON.stringify({
+            recipient,
+            template,
+            adminUsername,
+            adminPassword,
+            buyerUsername,
+            buyerPassword,
+          }),
         });
 
-        alert("Email Sent with PDF attachments!");
+        const data = await res.json();
+        alert(data.message || data.error);
       });
     </script>
   </body>

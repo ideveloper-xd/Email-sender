@@ -2,67 +2,143 @@ const express = require("express");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Nodemailer setup
+// ✅ Setup Nodemailer transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "teamdeveloperxd@gmail.com", // your Gmail
-    pass: "jssjhaqcdwcdsonc", // your app password (NO SPACES)
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-// Templates
+// ✅ Common Tips
+const emailTips = `
+🔥 Tips:
+1. Read carefully before using the panel.
+2. For support, contact our admin via Discord/Telegram.
+3. Keep your files private to avoid bans.
+`;
+
+// ✅ Templates
 const templates = {
-  welcome: {
-    subject: "Welcome to Our Platform!",
-    body: "Hello! 🎉 Welcome to our service. We're glad to have you!",
+  aim: {
+    subject: "🎯 Aim Supreme Panel - Thank You for Purchasing",
+    body: `Welcome to Aim Supreme!\n\nPlease follow the instructions in the attached PDF to get started.\n\n${emailTips}`,
+    html: `<h2>Welcome to <b>Aim Supreme</b> 🎯</h2>
+           <p>Please follow the instructions in the attached PDF to get started.</p>
+           <pre>${emailTips}</pre>`,
+    attachments: [
+      {
+        filename: "AimSupreme-English.pdf",
+        path: path.join(__dirname, "files", "aim-supreme-en.pdf"),
+      },
+    ],
   },
-  warning: {
-    subject: "⚠️ Warning Notice",
-    body: "Please be advised this is a warning regarding your account activity.",
+  esp: {
+    subject: "🔥 ESP Supreme Panel - Thank You for Purchasing",
+    body: `Welcome to ESP Supreme Panel!\n\nPlease follow the instructions in the attached PDF to get started.\n\n${emailTips}`,
+    html: `<h2>Welcome to <b>ESP Supreme Panel</b> 🔥</h2>
+           <p>Please follow the instructions in the attached PDF to get started.</p>
+           <pre>${emailTips}</pre>`,
+    attachments: [
+      {
+        filename: "EspSupreme-English.pdf",
+        path: path.join(__dirname, "files", "esp-supreme-en.pdf"),
+      },
+    ],
   },
-  newsletter: {
-    subject: "📰 Monthly Newsletter",
-    body: "Here’s our latest newsletter full of updates and news.",
+  dark: {
+    subject: "🧩 Dark Supreme Panel - Thank You for Purchasing",
+    body: `Welcome to Dark Supreme Panel!\n\nPlease follow the instructions in the attached PDF to get started.\n\n${emailTips}`,
+    html: `<h2>Welcome to <b>Dark Supreme Panel</b> 🧩</h2>
+           <p>Please follow the instructions in the attached PDF to get started.</p>
+           <pre>${emailTips}</pre>`,
+    attachments: [
+      {
+        filename: "DarkSupreme-English.pdf",
+        path: path.join(__dirname, "files", "dark-supreme-en.pdf"),
+      },
+    ],
+  },
+  essential: {
+    subject: "💀 Dark Essential Panel - Thank You for Purchasing",
+    body: `Welcome to Dark Essential!\n\nPlease follow the instructions in the attached PDF to get started.\n\n${emailTips}`,
+    html: `<h2>Welcome to <b>Dark Essential</b> 💀</h2>
+           <p>Please follow the instructions in the attached PDF to get started.</p>
+           <pre>${emailTips}</pre>`,
+    attachments: [
+      {
+        filename: "DarkEssential-English.pdf",
+        path: path.join(__dirname, "files", "dark-essential-en.pdf"),
+      },
+    ],
   },
 };
 
-// API route
-app.post("/send-email", (req, res) => {
-  const { recipient, template } = req.body;
+// ✅ API route
+app.post("/send-email", async (req, res) => {
+  try {
+    const {
+      recipient,
+      template,
+      adminUsername,
+      adminPassword,
+      buyerUsername,
+      buyerPassword,
+    } = req.body;
 
-  const mailOptions = {
-    from: "your_email@gmail.com",
-    to: recipient,
-    subject: templates[template].subject,
-    text: templates[template].body,
-    attachments: [
-      {
-        filename: "Aim Supreme[EnglishVersion].pdf",
-        path: "./files/aim-supreme-en.pdf",
-      },
-      {
-        filename: "Aim Supreme[HindiVersion].pdf",
-        path: "./files/aim-supreme-hi.pdf",
-      },
-    ],
-  };
-
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send("Error sending email");
+    if (!recipient || !template) {
+      return res
+        .status(400)
+        .json({ error: "Recipient and template are required." });
     }
-    res.send("Email sent: " + info.response);
-  });
+
+    if (!templates[template]) {
+      return res.status(400).json({ error: "Invalid template selected." });
+    }
+
+    const selected = templates[template];
+
+    // Add buyer credentials
+    const credentialsText = `\n\n🔑 Buyer Credentials:\nUsername: ${buyerUsername}\nPassword: ${buyerPassword}`;
+    const credentialsHtml = `<hr><p><b>🔑 Buyer Credentials:</b></p>
+                             <p>Username: <b>${buyerUsername}</b><br>
+                             Password: <b>${buyerPassword}</b></p>`;
+
+    // Add admin info (optional, remove if not needed)
+    const adminText = `\n\n📌 Sent by Admin: ${adminUsername}`;
+    const adminHtml = `<p><i>📌 Sent by Admin: ${adminUsername}</i></p>`;
+
+    const mailOptions = {
+      from: `"Developer-XD Panel Team" <${process.env.EMAIL_USER}>`,
+      to: recipient,
+      subject: selected.subject,
+      text: selected.body + credentialsText + adminText,
+      html: selected.html + credentialsHtml + adminHtml,
+      attachments: selected.attachments,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log(`✅ Email sent to ${recipient}: ${info.response}`);
+    res.json({ success: true, message: "Email sent successfully!" });
+  } catch (error) {
+    console.error("❌ Email sending failed:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to send email. Please try again later." });
+  }
 });
 
-// Run server
-app.listen(5000, () =>
-  console.log("✅ Server running on http://localhost:5000")
+// ✅ Run server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () =>
+  console.log(`🚀 Server running at http://localhost:${PORT}`)
 );
