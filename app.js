@@ -112,7 +112,7 @@ app.post("/send-email", async (req, res) => {
                              <p>Username: <b>${buyerUsername}</b><br>
                              Password: <b>${buyerPassword}</b></p>`;
 
-    // Add admin info (optional, remove if not needed)
+    // Add admin info (optional)
     const adminText = `\n\n📌 Sent by Admin: ${adminUsername}`;
     const adminHtml = `<p><i>📌 Sent by Admin: ${adminUsername}</i></p>`;
 
@@ -135,6 +135,19 @@ app.post("/send-email", async (req, res) => {
       .status(500)
       .json({ error: "Failed to send email. Please try again later." });
   }
+});
+
+// ✅ Health & Root Routes (for UptimeRobot / Browsers)
+app.get("/", (req, res) => {
+  res.send("✅ Email Sender Backend is running");
+});
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date(),
+  });
 });
 
 // ✅ Run server
