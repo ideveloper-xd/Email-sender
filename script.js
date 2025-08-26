@@ -72,7 +72,7 @@ emailForm.addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch(
-      "https://email-sender-968t.onrender.com/send-email",
+      "https://email-sender-10k3.onrender.com/send-email",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
